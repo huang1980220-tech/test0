@@ -34,13 +34,24 @@
   }
   .logo { font-size: 18px; font-weight: 800; color: var(--accent-color); }
   .badge { font-size: 10px; background: #332200; color: var(--accent-color); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--accent-color); }
+  
+  /* 讓整張卡片都可以點擊 */
+  .news-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    margin-bottom: 12px;
+  }
   .news-card {
     background: var(--card-bg);
     border-radius: 12px;
     padding: 16px;
-    margin-bottom: 12px;
     border: 1px solid #282933;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: transform 0.1s ease;
+  }
+  .news-card:active {
+    transform: scale(0.98);
   }
   .card-header {
     display: flex;
@@ -51,36 +62,9 @@
   }
   .tag { background: var(--tag-bg); color: var(--green-accent); padding: 2px 8px; border-radius: 4px; font-weight: 600; }
   .source-time { color: var(--text-secondary); }
-  .summary-text { font-size: 16px; line-height: 1.5; font-weight: 600; color: #ffffff; margin-bottom: 12px; }
-  .bullet-container {
-    background: #12131a;
-    border-left: 3px solid var(--accent-color);
-    padding: 10px 12px;
-    border-radius: 0 8px 8px 0;
-    font-size: 14px;
-    line-height: 1.6;
-    margin-bottom: 12px;
-  }
-  .link-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    padding: 8px 0;
-    background: transparent;
-    color: var(--accent-color);
-    border: 1px solid var(--accent-color);
-    border-radius: 8px;
-    text-decoration: none;
-    font-size: 13px;
-    font-weight: 600;
-  }
-  .loading-box {
-    text-align: center;
-    padding: 30px;
-    color: var(--text-secondary);
-    font-size: 14px;
-  }
+  .summary-text { font-size: 16px; line-height: 1.5; font-weight: 600; color: #ffffff; margin-bottom: 8px; }
+  .click-hint { font-size: 12px; color: var(--accent-color); text-align: right; margin-top: 8px; }
+  .loading-box { text-align: center; padding: 40px; color: var(--text-secondary); font-size: 14px; }
 </style>
 </head>
 <body>
@@ -90,76 +74,47 @@
   </header>
 
   <div id="news-list">
-    <div class="loading-box">📡 正在載入最新焦點新聞...</div>
+    <div class="loading-box">📡 正在載入最新新聞...</div>
   </div>
 
 <script>
-  // 備用測試資料（當雲端資料還沒更新時自動顯示）
-  const fallbackData = [
-    {
-      cat: '消費',
-      type: 'event',
-      source: 'ETtoday',
-      time: '即時焦點',
-      summary: '📌 7-ELEVEn 於 8/18 推出 OPENPOINT APP 限定 1 元濃萃美式咖啡搶購活動。',
-      url: 'https://tw.news.yahoo.com'
-    },
-    {
-      cat: '生活',
-      type: 'list',
-      source: 'Yahoo新聞',
-      time: '即時焦點',
-      bullets: [
-        '⚠️ <b>重點注意生肖</b>：屬鼠、蛇、猴、豬者。',
-        '🚫 <b>重點禁忌</b>：半夜不曬衣服、不吹口哨、不去水邊與山區。'
-      ],
-      url: 'https://tw.news.yahoo.com'
-    },
-    {
-      cat: '交通',
-      type: 'event',
-      source: '中央社',
-      time: '即時焦點',
-      summary: '📌 交通部宣布國道一號苗栗特定施工路段即日起速限降至 60 公里。',
-      url: 'https://tw.news.yahoo.com'
-    }
-  ];
-
-  // 渲染新聞卡片
   function renderNews(data) {
     const container = document.getElementById('news-list');
     container.innerHTML = '';
     
-    data.forEach(item => {
-      const card = document.createElement('div');
-      card.className = 'news-card';
-      
-      let bodyContent = '';
-      if (item.bullets && item.bullets.length > 0) {
-        bodyContent = `<div class="bullet-container">${item.bullets.map(b => `<div>${b}</div>`).join('')}</div>`;
-      } else {
-        bodyContent = `<div class="summary-text">${item.summary || item.title}</div>`;
-      }
+    if(!data || data.length === 0) {
+      container.innerHTML = '<div class="loading-box">暫無資料，請稍後重整</div>';
+      return;
+    }
 
-      card.innerHTML = `
-        <div class="card-header">
-          <span class="tag">${item.cat || '焦點'}</span>
-          <span class="source-time">${item.source || '即時新聞'} ｜ ${item.time || '剛剛'}</span>
+    data.forEach(item => {
+      const linkWrapper = document.createElement('a');
+      linkWrapper.className = 'news-card-link';
+      linkWrapper.href = item.url || '#';
+      linkWrapper.target = '_blank'; // 點擊會直接開啟原新聞網頁
+
+      linkWrapper.innerHTML = `
+        <div class="news-card">
+          <div class="card-header">
+            <span class="tag">${item.cat || '即時新聞'}</span>
+            <span class="source-time">${item.source || '中央社'} ｜ ${item.time || '最新'}</span>
+          </div>
+          <div class="summary-text">${item.summary || item.title}</div>
+          <div class="click-hint">🔗 點擊閱讀原始新聞 ➔</div>
         </div>
-        ${bodyContent}
-        <a href="${item.url || '#'}" target="_blank" class="link-btn">🔗 閱讀媒體原始報導</a>
       `;
-      container.appendChild(card);
+      container.appendChild(linkWrapper);
     });
   }
 
-  // 嘗試讀取自動產生的新聞檔案，如果沒有就顯示預設資料
-  fetch('news.json')
-    ? fetch('news.json')
-        .then(res => res.json())
-        .then(data => renderNews(data))
-        .catch(() => renderNews(fallbackData))
-    : renderNews(fallbackData);
+  // 強制讀取自動產生的 news.json 檔案（加上時間戳記防止瀏覽器快取舊資料）
+  fetch('news.json?t=' + new Date().getTime())
+    .then(res => res.json())
+    .then(data => renderNews(data))
+    .catch(err => {
+      console.error(err);
+      document.getElementById('news-list').innerHTML = '<div class="loading-box">❌ 載入失敗，請確認 news.json 是否已產生</div>';
+    });
 </script>
 </body>
 </html>
