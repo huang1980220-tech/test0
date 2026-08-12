@@ -5,115 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>擊碎標題黨 NEWS</title>
 <style>
-  :root {
-    --bg-color: #0f1015;
-    --card-bg: #1a1b23;
-    --accent-color: #ffbd59;
-    --text-primary: #ffffff;
-    --text-secondary: #a0a5b5;
-    --tag-bg: #282a36;
-    --green-accent: #38ef7d;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body {
-    background-color: var(--bg-color);
-    color: var(--text-primary);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
-    padding: 12px;
-    max-width: 500px;
-    margin: 0 auto;
-    padding-bottom: 40px;
-  }
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 4px;
-    margin-bottom: 12px;
-    border-bottom: 1px solid #282933;
-  }
-  .logo { font-size: 18px; font-weight: 800; color: var(--accent-color); }
-  .badge { font-size: 10px; background: #332200; color: var(--accent-color); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--accent-color); }
-  
-  /* 讓整張卡片都可以點擊 */
-  .news-card-link {
-    text-decoration: none;
-    color: inherit;
-    display: block;
-    margin-bottom: 12px;
-  }
-  .news-card {
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 16px;
-    border: 1px solid #282933;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    transition: transform 0.1s ease;
-  }
-  .news-card:active {
-    transform: scale(0.98);
-  }
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-    font-size: 12px;
-  }
-  .tag { background: var(--tag-bg); color: var(--green-accent); padding: 2px 8px; border-radius: 4px; font-weight: 600; }
-  .source-time { color: var(--text-secondary); }
-  .summary-text { font-size: 16px; line-height: 1.5; font-weight: 600; color: #ffffff; margin-bottom: 8px; }
-  .click-hint { font-size: 12px; color: var(--accent-color); text-align: right; margin-top: 8px; }
-  .loading-box { text-align: center; padding: 40px; color: var(--text-secondary); font-size: 14px; }
+  body { background: #0f1015; color: #fff; font-family: sans-serif; padding: 15px; max-width: 500px; margin: 0 auto; }
+  header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
+  .logo { font-size: 18px; font-weight: bold; color: #ffbd59; }
+  .card { background: #1a1b23; border: 1px solid #333; border-radius: 10px; padding: 15px; margin-bottom: 12px; display: block; text-decoration: none; color: white; }
+  .source { font-size: 12px; color: #38ef7d; margin-bottom: 6px; }
+  .title { font-size: 16px; font-weight: bold; line-height: 1.4; }
+  .hint { font-size: 12px; color: #ffbd59; text-align: right; margin-top: 8px; }
 </style>
 </head>
 <body>
   <header>
     <div class="logo">⚡ 擊碎標題黨 NEWS</div>
-    <div class="badge">賢哥私人專屬版</div>
   </header>
 
-  <div id="news-list">
-    <div class="loading-box">📡 正在載入最新新聞...</div>
-  </div>
+  <div id="list">📡 載入中...</div>
 
 <script>
-  function renderNews(data) {
-    const container = document.getElementById('news-list');
-    container.innerHTML = '';
-    
-    if(!data || data.length === 0) {
-      container.innerHTML = '<div class="loading-box">暫無資料，請稍後重整</div>';
-      return;
-    }
-
-    data.forEach(item => {
-      const linkWrapper = document.createElement('a');
-      linkWrapper.className = 'news-card-link';
-      linkWrapper.href = item.url || '#';
-      linkWrapper.target = '_blank'; // 點擊會直接開啟原新聞網頁
-
-      linkWrapper.innerHTML = `
-        <div class="news-card">
-          <div class="card-header">
-            <span class="tag">${item.cat || '即時新聞'}</span>
-            <span class="source-time">${item.source || '中央社'} ｜ ${item.time || '最新'}</span>
-          </div>
-          <div class="summary-text">${item.summary || item.title}</div>
-          <div class="click-hint">🔗 點擊閱讀原始新聞 ➔</div>
-        </div>
-      `;
-      container.appendChild(linkWrapper);
-    });
-  }
-
-  // 強制讀取自動產生的 news.json 檔案（加上時間戳記防止瀏覽器快取舊資料）
-  fetch('news.json?t=' + new Date().getTime())
+  fetch('news.json?t=' + Date.now())
     .then(res => res.json())
-    .then(data => renderNews(data))
+    .then(data => {
+      let html = '';
+      data.forEach(item => {
+        html += `
+          <a class="card" href="${item.url}" target="_blank">
+            <div class="source">📌 ${item.source} ｜ ${item.time}</div>
+            <div class="title">${item.title}</div>
+            <div class="hint">🔗 點擊閱讀新聞 ➔</div>
+          </a>
+        `;
+      });
+      document.getElementById('list').innerHTML = html;
+    })
     .catch(err => {
-      console.error(err);
-      document.getElementById('news-list').innerHTML = '<div class="loading-box">❌ 載入失敗，請確認 news.json 是否已產生</div>';
+      document.getElementById('list').innerHTML = '<div style="color:red;">載入失敗，請去 Actions 手動執行一次 Auto Fetch News。</div>';
     });
 </script>
 </body>
